@@ -1,0 +1,28 @@
+'context-menu':
+  'atom-text-editor': [
+    {
+      'label': 'Devunity'
+      'submenu':[
+        {'label':'Start', 'command': 'devunity:start' }
+        {'type': 'separator'}
+        {'label':'Stop','command': 'devunity:stop'}
+      ]
+
+    }
+  ]
+'menu': [
+  {
+    'label': 'Packages'
+    'submenu': [
+      'label': 'Devunity'
+      'submenu': [
+        {'label':'Start', 'command': 'devunity:start' }
+        {'type': 'separator'}
+        {'label':'Stop','command': 'devunity:stop'}
+        {'type': 'separator'}
+        {'label':'Stop all','command': 'devunity:stopAll'}
+
+      ]
+    ]
+  }
+]
