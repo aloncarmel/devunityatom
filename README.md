@@ -27,7 +27,7 @@ In case you need to stop all collaboration sessions you can do this by Clicking 
 
 # Settings
 
-You can change the default username shown on devunity by changing the settings above
+You can change the default anonymous username by signing up to [Devunity](http://devunity.com) and grabbing your API key. Once you have that, go into Atom > Perferences > Packages > Devunity > settings and input your API key.
 
 
 #Credit
