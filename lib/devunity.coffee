@@ -52,6 +52,9 @@ class DevunityView extends View
 
   initialize: ->
 
+    config = new SetupConfig()
+    config.setupApiDefault()
+
     atom.commands.add 'atom-workspace', 'devunity:start', => @start()
     atom.commands.add 'atom-workspace', 'devunity:stop', => @stop()
     atom.commands.add 'atom-workspace', 'devunity:stopAll', => @stopAll()
@@ -80,9 +83,6 @@ class DevunityView extends View
 
 
   start: ->
-
-    config = new SetupConfig()
-    config.setupApiDefault()
 
     if editor = atom.workspace.getActiveTextEditor()
 
