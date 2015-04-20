@@ -1,7 +1,7 @@
 {
   "name": "devunity",
   "main": "./lib/devunity",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Share and collaborate in real-time using devunity",
   "activationEvents": [
     "devunity:start",
