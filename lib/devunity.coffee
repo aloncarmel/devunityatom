@@ -90,7 +90,7 @@ class DevunityView extends View
       language = @getLanguage()
 
       $.ajax
-        url:'http://localhost:1337/c/new/'+atom.config.get('devunity.apikey')
+        url:'http://devunity.com/c/new/'+atom.config.get('devunity.apikey')
         type:'POST'
         data:{'code':code,'language':language}
         dataType:'json'
