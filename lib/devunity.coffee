@@ -12,14 +12,11 @@ Firepad = require './firepad-lib'
 class SetupConfig
   constructor: ->
 
-  setupUserNameDefault: ->
-    hash = Crypto.createHash('md5').digest('base64');
-    if !atom.config.get("devunity.username")
-      atom.config.set("devunity.username", 'atom-'+hash.substring(0,5))
+  setupApiDefault: ->
+    if !atom.config.get("devunity.apikey") || atom.config.get("devunity.apikey") == ''
+      #user is anonymous until proven otherwise :)
+      atom.config.set("devunity.apikey", 'anonymous')
 
-
-config = new SetupConfig()
-config.setupUserNameDefault()
 
 class ColabView extends View
 
@@ -29,12 +26,14 @@ class ColabView extends View
       @div
         style: 'padding:10px;border-bottom:1px solid #ef4423'
         =>
-          @div '[x] Stop collaboration',id: 'stopCollab', class: ' pull-right',style:'cursor:pointer;color:#ef4423'
+          @div '[x] Stop session',id: 'stopCollab', class: ' pull-right',style:'cursor:pointer;color:#ef4423'
+          @div id: 'users', class: ' pull-right'
+          @div id: 'chat', class: ' pull-right', style:'max-width:300px;overflow:hidden;height:17px;width:100%'
           @div class: 'pull-left', =>
             @span '{dev',style:''
             @span 'un',style:'color:#ef4423'
             @span 'ity}',style:'padding-right:5px'
-          @a 'Collaborating on '+@filename+' at devunity.com/c/'+@codekey, href: 'http://devunity.com/c/'+@codekey
+          @a 'Session '+@filename+' at devunity.com/c/'+@codekey, href: 'http://devunity.com/c/'+@codekey
 
   show: ->
 
@@ -82,27 +81,39 @@ class DevunityView extends View
 
   start: ->
 
+    config = new SetupConfig()
+    config.setupApiDefault()
+
     if editor = atom.workspace.getActiveTextEditor()
 
       code = atom.workspace.getActiveTextEditor().getText()
       language = @getLanguage()
 
       $.ajax
-        url:'http://www.devunity.com/c/new'
+        url:'http://localhost:1337/c/new/'+atom.config.get('devunity.apikey')
         type:'POST'
         data:{'code':code,'language':language}
         dataType:'json'
         crossDomain: true
         success: (response) =>
           if response
-            @confirm(response.url)
+            @confirm(response.url,response.username)
+    else
+      atom.confirm(
+        {
+          'message':'You\'re not logged in :/',
+          'detailedMessage':'In order to use devunity you need to set your API key in the plugin settings screen',
+          'buttons':
+            {'good':'test','bad':'test'}
+        }
+      );
 
 
-  confirm: (codeurl) ->
+  confirm: (codeurl,username) ->
     @detach()
 
     codekey = codeurl.split "="
-
+    console.log(codekey)
     @ref = new Firebase('https://devunityio.firebaseio.com/c/'+codekey[1]);
 
     editor = atom.workspace.getActiveTextEditor()
@@ -111,6 +122,8 @@ class DevunityView extends View
     hash = Crypto.createHash('md5').digest('base64');
 
     @coderef = @ref.child('code');
+    @userref = @ref.child('users');
+    @chatref = @ref.child('chat');
 
     @coderef.once 'value', (snapshot) =>
         options = {sv_: Firebase.ServerValue.TIMESTAMP}
@@ -121,7 +134,7 @@ class DevunityView extends View
         else
           editor.setText ''
         @pad = Firepad.fromAtom @ref, editor, options
-        @pad.setUserId('@'+atom.config.get('devunity.username'));
+        @pad.setUserId('@'+username);
 
         @view = new ColabView(codekey[1],@getFilename())
         @view.show()
@@ -133,6 +146,23 @@ class DevunityView extends View
         #Lets add the comment stating where the collaboration is being done online
         #comment = @getColabComment(@getLanguage(),codekey[1])
         #editor.setText comment+editor.getText()
+        @chatref.on 'child_added', (snapshot) =>
+          chattext = snapshot.val().text
+          chatuser = snapshot.val().user
+          $('#chat').prepend('<div>'+chatuser+':'+chattext+'</div>');
+
+        @userref.on 'child_added', (snapshot) =>
+          console.log(snapshot)
+          user = snapshot.val();
+          connecteduser = snapshot.name()
+          connectedusercolor = snapshot.val().color;
+          $('#users').append($("<div style='margin-right:5px;float:right'/>").attr("id", connectedusercolor.substr(1)));
+          $('#'+connectedusercolor.substr(1)).css('color',connectedusercolor);
+          $('#'+connectedusercolor.substr(1)).text(connecteduser);
+
+
+
+
 
   getFilename: ->
     filepath = atom.workspace.getActiveTextEditor().getPath()

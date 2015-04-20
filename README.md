@@ -18,7 +18,7 @@ Thats it!
 
 # Stopping
 
-You can stop the collaboration session per file by clicking 'stop collaboration' button on the bottom panel on each active session or you can either right click on the code editor, menu item devunity > stop
+You can stop the collaboration session per file by clicking 'stop session' button on the bottom panel on each active session or you can either right click on the code editor, menu item devunity > stop
 You can also stop a collaboration session from Packages menu > Devunity > stop
 
 Closing a file will stop the collaboration session automatically.
