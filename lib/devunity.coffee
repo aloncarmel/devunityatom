@@ -101,15 +101,15 @@ class DevunityView extends View
         success: (response) =>
           if response
             @confirm(response.url,response.username)
-    else
-      atom.confirm(
-        {
-          'message':'You\'re not logged in :/',
-          'detailedMessage':'In order to use devunity you need to set your API key in the plugin settings screen',
-          'buttons':
-            {'good':'test','bad':'test'}
-        }
-      );
+    #else
+    #  atom.confirm(
+    #    {
+    #      'message':'You\'re not logged in :/',
+    #      'detailedMessage':'In order to use devunity you need to set your API key in the plugin settings screen',
+    #      'buttons':
+    #        {'good':'test','bad':'test'}
+    #    }
+    #  );
 
 
   confirm: (codeurl,username) ->
