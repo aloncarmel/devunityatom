@@ -27,6 +27,9 @@ class ColabView extends View
         style: 'padding:10px;border-bottom:1px solid #ef4423'
         =>
           @div '[x] Stop session',id: 'stopCollab', class: ' pull-right',style:'cursor:pointer;color:#ef4423'
+          @div id: 'readonly', class: ' pull-right',style:'cursor:pointer;margin-right:4px;font-size:10px', =>
+            @label 'Read only ', =>
+              @input type: 'checkbox',id:'readonlycheckbox',style:'margin-right:3px;'
           @div id: 'users', class: ' pull-right'
           @div id: 'chat', class: ' pull-right', style:'max-width:300px;overflow:hidden;height:17px;width:100%'
           @div class: 'pull-left', =>
@@ -124,6 +127,7 @@ class DevunityView extends View
     @coderef = @ref.child('code');
     @userref = @ref.child('users');
     @chatref = @ref.child('chat');
+    @readonlyref = @ref.child('readonly');
 
     @coderef.once 'value', (snapshot) =>
         options = {sv_: Firebase.ServerValue.TIMESTAMP}
@@ -139,13 +143,23 @@ class DevunityView extends View
         @view = new ColabView(codekey[1],@getFilename())
         @view.show()
 
+        #stop collab button
         $('#stopCollab').on 'click', =>
           @stop()
+
         #@initStatistics
+
+        #read only button
+        $('#readonlycheckbox').on 'click', =>
+          console.log($('#readonlycheckbox')[0].checked)
+          @readonlyref.set($('#readonlycheckbox')[0].checked);
 
         #Lets add the comment stating where the collaboration is being done online
         #comment = @getColabComment(@getLanguage(),codekey[1])
         #editor.setText comment+editor.getText()
+        @readonlyref.on 'value',(snapshot) =>
+          $('#readonlycheckbox')[0].checked = snapshot.val()
+
         @chatref.on 'child_added', (snapshot) =>
           chattext = snapshot.val().text
           chatuser = snapshot.val().user
@@ -160,7 +174,12 @@ class DevunityView extends View
           $('#'+connectedusercolor.substr(1)).css('color',connectedusercolor);
           $('#'+connectedusercolor.substr(1)).text(connecteduser);
 
-
+        @userref.on 'child_removed', (snapshot) =>
+          console.log(snapshot)
+          user = snapshot.val();
+          connecteduser = snapshot.name()
+          connectedusercolor = snapshot.val().color;
+          $('#'+connectedusercolor.substr(1)).remove();
 
 
 
