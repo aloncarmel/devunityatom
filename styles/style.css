@@ -1,0 +1,50 @@
+.chatinput {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.5);
+  font-size: 15px;
+  padding: 5px;
+  border-radius: 5px;
+  width: 295px;
+}
+
+.chatbutton {
+
+    font-size: 15px;
+    border-radius: 5px;
+    margin-left: 5px;
+    border: 1px solid rgba(255,255,255,0.5);
+    padding: 5px;
+
+}
+
+.chatitemwrapper {
+  padding:10px;border-bottom:1px solid rgba(239,68,35,0.2);font-size:12px;height:39px;
+}
+.colabdetailsrow {
+  padding:10px;border-bottom:1px solid rgba(239,68,35,0.5) ;font-size:12px;height:39px;
+}
+
+.readonly {
+  cursor:pointer;margin-right:4px;font-size:10px;
+}
+.stopcollab {
+  cursor:pointer;color:#ef4423;
+}
+.openchattext {
+  cursor:pointer;
+  margin-right:5px;
+  color:#e57853;
+}
+.chatcancel {
+  cursor:pointer;
+  font-size: 15px;
+  padding:5px
+}
+.devunitychatbox {
+  padding:10px;
+}
+.sendchattext {
+  font-size:12px;
+  margin-bottom:10px
+}

@@ -3,9 +3,9 @@
     {
       'label': 'Devunity'
       'submenu':[
-        {'label':'Start', 'command': 'devunity:start' }
+        {'label':'Start session on this file', 'command': 'devunity:start' }
         {'type': 'separator'}
-        {'label':'Stop','command': 'devunity:stop'}
+        {'label':'Stop session on this file','command': 'devunity:stop'}
       ]
 
     }
@@ -16,11 +16,14 @@
     'submenu': [
       'label': 'Devunity'
       'submenu': [
-        {'label':'Start', 'command': 'devunity:start' }
+        {'label':'Start on current selected file', 'command': 'devunity:start' }
         {'type': 'separator'}
-        {'label':'Stop','command': 'devunity:stop'}
+        {'label':'Stop on current selected file','command': 'devunity:stop'}
         {'type': 'separator'}
-        {'label':'Stop all','command': 'devunity:stopAll'}
+        {'label':'Stop all sessions','command': 'devunity:stopAll'}
+        #{'type': 'separator'}
+        #{'label':'Start live codecasting','command': 'devunity:startLive'}
+        #{'label':'Stop live codecasting','command': 'devunity:stopLive'}
 
       ]
     ]

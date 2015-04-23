@@ -9,6 +9,10 @@ Firebase = require 'firebase'
 Firepad = require './firepad-lib'
 
 
+class Utils
+  removeChat: (id) ->
+    $('#'+id).remove()
+
 class SetupConfig
   constructor: ->
 
@@ -17,6 +21,79 @@ class SetupConfig
       #user is anonymous until proven otherwise :)
       atom.config.set("devunity.apikey", 'anonymous')
 
+class ChatSendView extends View
+
+  @content: ->
+    @div class: 'devunity devunitypanel devunitychatbox',id:'devunitychatbox',=>
+      @div 'Send a chat message',class:'sendchattext'
+      #@input class:'chatinput', type:'text',id:'chatinput'
+      @subview 'chatinput', new TextEditorView(mini: true,placeholderText:'Enter your chat message')
+      @button 'Send', class:'chatbutton',type:'submit',id:'chatbutton'
+      @span 'Cancel', class:'chatcancel',id:'chatcancel'
+
+  detaching: false
+
+  detach: ->
+    return unless @hasParent()
+    @detaching = true
+    @chatinput.setText('')
+    super
+    @detaching = false
+    @closeChat()
+
+  sendChat: ->
+    @pad = atom.workspace.getActiveTextEditor()
+    if @pad.firepad
+      console.log(@pad.firepad)
+      @codekey = @pad.devunitycodeid
+      @text = @chatinput.getText()
+      console.log(@codekey)
+      @chatref = new Firebase('https://devunityio.firebaseio.com/c/'+@codekey+'/chat');
+      @chatref.push({user: @pad.firepad.firebaseAdapter_.userId_ ,text:@text});
+      $('#chatinput').empty()
+      @closeChat()
+
+  closeChat: ->
+    $('#devunitychatbox').parent().remove()
+
+  show: ->
+    @removepanel = atom.workspace.addModalPanel(item:this)
+    @chatinput.focus()
+
+    $('#chatbutton').on 'click', =>
+      @sendChat()
+
+    $('#chatcancel').on 'click', =>
+      @closeChat()
+
+
+class ChatViewItem extends View
+  @constructure: (username,text,chatid) ->
+    @content(username,text,chatid)
+  @content: (username,text,chatid) ->
+
+    @div class: 'devunity devunitypanel panel panel-bottom', id: chatid, =>
+      @div
+        class:'chatitemwrapper'
+        =>
+          @div class: 'pull-left', =>
+            @span '{dev',style:''
+            @span 'un',style:'color:#ef4423'
+            @span 'ity:chat}',style:'padding-right:5px'
+          @div class: 'pull-left',style:'margin-left:5px', =>
+            @span ''+username+': '+text
+
+  removechat: ->
+    $('#'+this.attr('id')).fadeOut ->
+      #$(this).remove()
+      $(this).parent().remove()
+
+  show: ->
+    @removepanel = atom.workspace.addBottomPanel(item:this)
+    console.log(this.attr('id'));
+    setTimeout =>
+     @removechat()
+    , 3000
 
 class ColabView extends View
 
@@ -24,22 +101,22 @@ class ColabView extends View
     #console.log(@codekey)
     @div class: 'devunity devunitypanel panel panel-bottom devunity_'+@codekey+'',outlet: @codekey , =>
       @div
-        style: 'padding:10px;border-bottom:1px solid #ef4423'
+        class: 'colabdetailsrow'
         =>
-          @div '[x] Stop session',id: 'stopCollab', class: ' pull-right',style:'cursor:pointer;color:#ef4423'
-          @div id: 'readonly', class: ' pull-right',style:'cursor:pointer;margin-right:4px;font-size:10px', =>
+          @div '[x] Stop',id: 'stopCollab', class: 'stopcollab pull-right'
+          @div '[C] Send chat',id: 'openchat', class:'openchattext pull-right'
+          @div id: 'readonly', class: 'readonly pull-right', =>
             @label 'Read only ', =>
               @input type: 'checkbox',id:'readonlycheckbox',style:'margin-right:3px;'
           @div id: 'users', class: ' pull-right'
-          @div id: 'chat', class: ' pull-right', style:'max-width:300px;overflow:hidden;height:17px;width:100%'
           @div class: 'pull-left', =>
             @span '{dev',style:''
             @span 'un',style:'color:#ef4423'
-            @span 'ity}',style:'padding-right:5px'
-          @a 'Session '+@filename+' at devunity.com/c/'+@codekey, href: 'http://devunity.com/c/'+@codekey
+            @span 'ity:session}',style:'padding-right:5px'
+          @div class: 'pull-left', =>
+            @a 'http://devunity.com/c/'+@codekey, href: 'http://devunity.com/c/'+@codekey,target:"_blank"
 
   show: ->
-
     atom.workspace.addBottomPanel(item: this)
 
 module.exports =
@@ -62,6 +139,10 @@ class DevunityView extends View
     atom.commands.add 'atom-workspace', 'devunity:stop', => @stop()
     atom.commands.add 'atom-workspace', 'devunity:stopAll', => @stopAll()
 
+    atom.commands.add 'atom-workspace', 'devunity:startLive', => @startLive()
+    atom.commands.add 'atom-workspace', 'devunity:stopLive', => @stopLive()
+
+
     @stopobserving = atom.workspace.observeActivePaneItem (pad) =>
       @managePanes(pad)
 
@@ -79,11 +160,40 @@ class DevunityView extends View
 
   managePanes: (@pad) ->
 
+    @manageLive(@pad)
+
     $('.devunitypanel').hide()
     if @pad
       if @pad.devunitycodeid
         $('.devunity_'+@pad.devunitycodeid).show()
 
+  startLive: ->
+
+    #turn on live sessions
+    #Grab a playlist ID and save it.
+
+    $.ajax
+      url:'http://devunity.com/playlist/new',
+      type:'GET'
+      dataType:'json'
+      crossDomain: true
+      success: (response) =>
+        if response
+          console.log(response)
+          atom.config.set("devunity.livekey",response.key);
+
+  manageLive: (@pad) ->
+
+    if atom.config.get("devunity.livekey")
+      console.log('We are here!');
+      #lets open a new session for this pad. dont do anything if there is an existing one.
+      if !@pad.firepad
+        @start()
+
+      #add the current pad id to the playlist and broadcast it.
+      @playlist = new Firebase('https://devunityio.firebaseio.com/p/'+atom.config.get("devunity.livekey"));
+      @playlistsessions = @playlist.child('sessions');
+      @playlistsessions.push(@pad.devunitycodeid);
 
   start: ->
 
@@ -100,23 +210,14 @@ class DevunityView extends View
         crossDomain: true
         success: (response) =>
           if response
+            if atom.config.get('devunity.apikey') == 'anonymous'
+              alert('Please note, this session was created as anonymous, to get your own user head over to devunity.com')
             @confirm(response.url,response.username)
-    #else
-    #  atom.confirm(
-    #    {
-    #      'message':'You\'re not logged in :/',
-    #      'detailedMessage':'In order to use devunity you need to set your API key in the plugin settings screen',
-    #      'buttons':
-    #        {'good':'test','bad':'test'}
-    #    }
-    #  );
-
 
   confirm: (codeurl,username) ->
     @detach()
 
     codekey = codeurl.split "="
-    console.log(codekey)
     @ref = new Firebase('https://devunityio.firebaseio.com/c/'+codekey[1]);
 
     editor = atom.workspace.getActiveTextEditor()
@@ -130,59 +231,78 @@ class DevunityView extends View
     @readonlyref = @ref.child('readonly');
 
     @coderef.once 'value', (snapshot) =>
-        options = {sv_: Firebase.ServerValue.TIMESTAMP}
+        if snapshot
+          options = {sv_: Firebase.ServerValue.TIMESTAMP}
+
+          #console.log(snapshot.val())
+
+          if editor.getText() != ''
+            options.overwrite = true
+          else
+            editor.setText ''
+          @pad = Firepad.fromAtom @ref, editor, options
+          @pad.setUserId(username+' from atom');
+
+          @view = new ColabView(codekey[1],@getFilename())
+          @view.show()
+
+          #stop collab button
+          $('#stopCollab').on 'click', =>
+            @stop()
+
+          $('#openchat').on 'click', =>
+            @openChatInput()
+
+          #@initStatistics
+
+          #read only button
+          $('#readonlycheckbox').on 'click', =>
+            @readonlyref.set($('#readonlycheckbox')[0].checked);
+
+          #Lets add the comment stating where the collaboration is being done online
+          #comment = @getColabComment(@getLanguage(),codekey[1])
+          #editor.setText comment+editor.getText()
+
+          @readonlyref.on 'value',(snapshot) =>
+            if snapshot
+              $('#readonlycheckbox')[0].checked = snapshot.val()
+
+          @chatref.on 'child_added', (snapshot) =>
+            if snapshot
+              chattext = snapshot.val().text
+              chatuser = snapshot.val().user
+              console.log('chat message!');
+              if chattext && chatuser
+                @viewchat = new ChatViewItem(chatuser,chattext,snapshot.name())
+                @viewchat.show()
+
+          @userref.on 'child_added', (snapshot) =>
+            #console.log(snapshot)
+            if snapshot
+              user = snapshot.val();
+              connecteduser = snapshot.name()
+              connectedusercolor = snapshot.val().color;
+              if $('#users') && connecteduser && connectedusercolor
+                $('#users').append($("<div style='margin-right:5px;float:right'/>").attr("id", connectedusercolor.substr(1)));
+                $('#'+connectedusercolor.substr(1)).css('color',connectedusercolor);
+                $('#'+connectedusercolor.substr(1)).text(connecteduser);
+
+          @userref.on 'child_removed', (snapshot) =>
+            if snapshot
+              user = snapshot.val();
+              connecteduser = snapshot.name()
+              connectedusercolor = snapshot.val().color;
+              if user && connecteduser && connectedusercolor
+                $('#'+connectedusercolor.substr(1)).remove();
+
+  openChatInput: ->
+
+    @chatinput = new ChatSendView()
+    @chatinput.show()
 
 
-        if !snapshot.val().code && editor.getText() != ''
-          options.overwrite = true
-        else
-          editor.setText ''
-        @pad = Firepad.fromAtom @ref, editor, options
-        @pad.setUserId('@'+username);
-
-        @view = new ColabView(codekey[1],@getFilename())
-        @view.show()
-
-        #stop collab button
-        $('#stopCollab').on 'click', =>
-          @stop()
-
-        #@initStatistics
-
-        #read only button
-        $('#readonlycheckbox').on 'click', =>
-          console.log($('#readonlycheckbox')[0].checked)
-          @readonlyref.set($('#readonlycheckbox')[0].checked);
-
-        #Lets add the comment stating where the collaboration is being done online
-        #comment = @getColabComment(@getLanguage(),codekey[1])
-        #editor.setText comment+editor.getText()
-        @readonlyref.on 'value',(snapshot) =>
-          $('#readonlycheckbox')[0].checked = snapshot.val()
-
-        @chatref.on 'child_added', (snapshot) =>
-          chattext = snapshot.val().text
-          chatuser = snapshot.val().user
-          $('#chat').prepend('<div>'+chatuser+':'+chattext+'</div>');
-
-        @userref.on 'child_added', (snapshot) =>
-          console.log(snapshot)
-          user = snapshot.val();
-          connecteduser = snapshot.name()
-          connectedusercolor = snapshot.val().color;
-          $('#users').append($("<div style='margin-right:5px;float:right'/>").attr("id", connectedusercolor.substr(1)));
-          $('#'+connectedusercolor.substr(1)).css('color',connectedusercolor);
-          $('#'+connectedusercolor.substr(1)).text(connecteduser);
-
-        @userref.on 'child_removed', (snapshot) =>
-          console.log(snapshot)
-          user = snapshot.val();
-          connecteduser = snapshot.name()
-          connectedusercolor = snapshot.val().color;
-          $('#'+connectedusercolor.substr(1)).remove();
-
-
-
+  sendChatInput: ->
+    #
   getFilename: ->
     filepath = atom.workspace.getActiveTextEditor().getPath()
     if(filepath)
@@ -193,15 +313,22 @@ class DevunityView extends View
 
   getLanguage: ->
 
-    filepath = atom.workspace.getActiveTextEditor().getPath()
-    if(!filepath)
-      language = 'javascript'
-    else
-      language = filepath.substring(filepath.lastIndexOf(".")+1)
-      if(!language)
-        language = 'javascript'
+    #filepath = atom.workspace.getActiveTextEditor().getPath()
+    #if(!filepath)
+    #  language = 'javascript'
+    #else
+    #  language = filepath.substring(filepath.lastIndexOf(".")+1)
+    #  if(!language)
+    #    language = 'javascript'
 
-    return language
+    editor = atom.workspace.getActiveEditor()
+    grammar = editor.getGrammar()
+    language = grammar.name;
+    console.log(grammar)
+    if language == 'Null Grammar'
+      language = 'javascript'
+
+    return language.toLowerCase()
 
   getColabComment: (fileextension,codekey) ->
 
@@ -339,6 +466,7 @@ class DevunityView extends View
     @stopItem(@pad)
 
   stopAll: ->
+    atom.config.unset("devunity.livekey");
     editors = atom.workspace.getEditors()
     for i,d in editors
       @stopItem(i)
