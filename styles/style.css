@@ -22,14 +22,23 @@
   padding:10px;border-bottom:1px solid rgba(239,68,35,0.2);font-size:12px;height:39px;
 }
 .colabdetailsrow {
-  padding:10px;border-bottom:1px solid rgba(239,68,35,0.5) ;font-size:12px;height:39px;
+  /*padding:10px;
+  border-bottom:1px solid rgba(239,68,35,0.5) ;
+  font-size:12px;*/
+  height:39px;
 }
-
+.devunitypanel {
+  max-width:100% !important;
+}
 .readonly {
   cursor:pointer;margin-right:4px;font-size:10px;
 }
 .stopcollab {
   cursor:pointer;color:#ef4423;
+}
+.details {
+  margin-right:5px;
+  cursor:pointer;
 }
 .openchattext {
   cursor:pointer;
@@ -46,5 +55,20 @@
 }
 .sendchattext {
   font-size:12px;
-  margin-bottom:10px
+  margin-bottom:10px;
+  margin-top:10px;
+}
+.justatest {
+  position: absolute;
+  background-color: red;
+  border-left: 2px solid #e4b3ff;
+  background:red;
+  z-index:1;
+}
+.detailsclose {
+  cursor:pointer;
+  float:right;
+}
+.floatright {
+float:right
 }

@@ -13,6 +13,83 @@ class Utils
   removeChat: (id) ->
     $('#'+id).remove()
 
+
+class StartFromKeyView extends View
+  @content: ->
+    @div class:'devunity devunitypanel devunitystartfromkey',id:'devunitystartfromkey',=>
+      @div 'Enter your session key below and hit start',class:'sendchattext'
+      @subview 'sessionkey', new TextEditorView(mini: true)
+      @button 'Start', class:'chatbutton',type:'submit',id:'startsession'
+      @span 'Cancel',class:'floatright',id:'startkeyclose'
+
+    detaching: false
+
+  closeStartkey: ->
+    $('#devunitystartfromkey').parent().remove()
+
+  @detach: ->
+    return unless @hasParent()
+    @detaching = true
+    @sessionkey.setText('')
+    super
+    @detaching = false
+    @closeChat()
+
+  show: ->
+    atom.workspace.open()
+      .then ->
+        @removepanel = atom.workspace.addModalPanel(item:this)
+        @sessionkey.focus()
+        $('#startsession').on 'click', =>
+          @startSessionFromKey()
+
+        $('#startkeyclose').on 'click', =>
+          @closeStartkey()
+
+  open: ->
+    this.show()
+
+  startSessionFromKey: ->
+    #b3e02e312f277862ea7f4a8eb82e97
+
+    #@confirm("/hello?codekey="+@sessionkey.getText(),'Anonymous')
+
+
+
+class ShowSessionDetails extends View
+  @content: (codekey) ->
+    @div class:'devunity devunitypanel devunitysessiondetails',id:'devunitysessiondetails',=>
+      @div 'This is your current session details',class:'sendchattext'
+      @div 'Session on web',class:'sendchattext'
+      @subview 'sessionurl', new TextEditorView(mini: true)
+      @a 'Open in browser', class:'floatright', href: 'http://devunity.com/c/'+codekey,target:"_blank"
+      @hr
+      @div 'Session key',class:'sendchattext'
+      @subview 'sessionkey', new TextEditorView(mini: true)
+      @span 'Close', class:'detailsclose',id:'detailsclose'
+
+    detaching: false
+
+  closeDetails: ->
+    $('#devunitysessiondetails').parent().remove()
+
+  @detach: ->
+    return unless @hasParent()
+    @detaching = true
+    @sessionkey.setText('')
+    super
+    @detaching = false
+    @closeChat()
+
+  show: (codekey) ->
+    @sessionkey.setText(codekey)
+    @sessionurl.setText('http://www.devunity.com/c/'+codekey);
+    @removepanel = atom.workspace.addModalPanel(item:this)
+    @sessionkey.focus()
+
+    $('#detailsclose').on 'click', =>
+      @closeDetails()
+
 class SetupConfig
   constructor: ->
 
@@ -99,12 +176,13 @@ class ColabView extends View
 
   @content: (@codekey, @filename) ->
     #console.log(@codekey)
-    @div class: 'devunity devunitypanel panel panel-bottom devunity_'+@codekey+'',outlet: @codekey , =>
+    @div class: 'devunity devunitypanel inline-block devunity_'+@codekey+'',outlet: @codekey , =>
       @div
         class: 'colabdetailsrow'
         =>
           @div '[x] Stop',id: 'stopCollab', class: 'stopcollab pull-right'
           @div '[C] Send chat',id: 'openchat', class:'openchattext pull-right'
+          @div '[D] Details',id: 'details', class: 'details pull-right'
           @div id: 'readonly', class: 'readonly pull-right', =>
             @label 'Read only ', =>
               @input type: 'checkbox',id:'readonlycheckbox',style:'margin-right:3px;'
@@ -112,21 +190,22 @@ class ColabView extends View
           @div class: 'pull-left', =>
             @span '{dev',style:''
             @span 'un',style:'color:#ef4423'
-            @span 'ity:session}',style:'padding-right:5px'
-          @div class: 'pull-left', =>
-            @a 'http://devunity.com/c/'+@codekey, href: 'http://devunity.com/c/'+@codekey,target:"_blank"
+            @span 'ity}'
+          @div class: 'pull-left', style:'padding-left:5px;padding-right:5px',=>
+            @a 'Open in web', href: 'http://devunity.com/c/'+@codekey,target:"_blank"
 
   show: ->
-    atom.workspace.addBottomPanel(item: this)
+    statusbar = new StatusBarManager()
+    statusbar.addRightTile(item: this, priority: 1000)
 
-module.exports =
+    #atom.workspace.addBottomPanel(item: this)
+
 class DevunityView extends View
   @activate: -> new DevunityView
 
   @content: ->
-    @div class: 'devunity overlay from-top mini', =>
-      @subview 'miniEditor', new TextEditorView(mini: true)
-      @div class: 'message', outlet: 'message'
+    @div class: 'devunity devunitypanel panel panel-bottom devunity_'+@codekey+'',outlet: @codekey , =>
+      @div
 
   detaching: false
 
@@ -139,8 +218,10 @@ class DevunityView extends View
     atom.commands.add 'atom-workspace', 'devunity:stop', => @stop()
     atom.commands.add 'atom-workspace', 'devunity:stopAll', => @stopAll()
 
-    atom.commands.add 'atom-workspace', 'devunity:startLive', => @startLive()
-    atom.commands.add 'atom-workspace', 'devunity:stopLive', => @stopLive()
+    #atom.commands.add 'atom-workspace', 'devunity:startLive', => @startLive()
+    #atom.commands.add 'atom-workspace', 'devunity:stopLive', => @stopLive()
+
+    #atom.commands.add 'atom-workspace', 'devunity:startfromkey', => @startFromKey()
 
 
     @stopobserving = atom.workspace.observeActivePaneItem (pad) =>
@@ -166,6 +247,10 @@ class DevunityView extends View
     if @pad
       if @pad.devunitycodeid
         $('.devunity_'+@pad.devunitycodeid).show()
+
+  startFromKey: ->
+    @startkey = new StartFromKeyView()
+    @startkey.open()
 
   startLive: ->
 
@@ -212,9 +297,9 @@ class DevunityView extends View
           if response
             if atom.config.get('devunity.apikey') == 'anonymous'
               alert('Please note, this session was created as anonymous, to get your own user head over to devunity.com')
-            @confirm(response.url,response.username)
+            @activateSession(response.url,response.username)
 
-  confirm: (codeurl,username) ->
+  activateSession: (codeurl,username) ->
     @detach()
 
     codekey = codeurl.split "="
@@ -253,7 +338,11 @@ class DevunityView extends View
           $('#openchat').on 'click', =>
             @openChatInput()
 
-          #@initStatistics
+          $('#details').on 'click', =>
+            @detailView = new ShowSessionDetails(codekey[1])
+            @detailView.show(codekey[1])
+
+          @initStatistics()
 
           #read only button
           $('#readonlycheckbox').on 'click', =>
@@ -300,9 +389,6 @@ class DevunityView extends View
     @chatinput = new ChatSendView()
     @chatinput.show()
 
-
-  sendChatInput: ->
-    #
   getFilename: ->
     filepath = atom.workspace.getActiveTextEditor().getPath()
     if(filepath)
@@ -395,20 +481,19 @@ class DevunityView extends View
   initStatistics: ->
 
 		#Lets collect some statistics
-    @editor = atom.workspace.getActiveTextEditor()
-    @ref = new Firebase('https://devunityio.firebaseio.com/c/'+codekey[1]);
-    @stats = @ref.child('statistics')
+    pad = atom.workspace.getActiveTextEditor()
+    @ref = new Firebase('https://devunityio.firebaseio.com/c/'+@pad.devunitycodeid);
+    stats = @ref.child('statistics')
 
-		#@editor.on 'change', =>
-
-			#console.log('Change of editor');
-
-			#@stats.update({lines:editor.session.doc.getLength()});
-
-			#@stats.update({length:editor.session.getValue().length});
+    pad.onDidChange(->
+			      stats.update({lines:pad.getLineCount()});
+			      stats.update({length:pad.getText().length});
+        );
 
 
-		#@editor.on 'copy', =>
+
+
+		#pad.on 'copy', =>
 
 			#console.log('copy');
 
@@ -419,7 +504,7 @@ class DevunityView extends View
 
 
 
-		#@editor.on 'focus', =>
+     #$(window).on 'focus', (event) =>
 
 			#console.log('focus');
 
@@ -455,13 +540,20 @@ class DevunityView extends View
 
     console.log('Stop collab!')
     $('#stopCollab').detach()
+    selections = @pad.getSelections()
+    for i,d in selections
+      i.clear()
+
+    decorations = @pad.getDecorations()
+    for i,d in decorations
+      i.destroy()
+
     if @pad.firepad
       @pad.firepad.dispose()
       $('.devunity_'+@pad.devunitycodeid).detach()
       delete @pad.devunitycodeid
 
   stop: ->
-
     @pad = atom.workspace.getActiveTextEditor()
     @stopItem(@pad)
 
@@ -470,3 +562,21 @@ class DevunityView extends View
     editors = atom.workspace.getEditors()
     for i,d in editors
       @stopItem(i)
+
+#Lets start everything!
+
+class StatusBarManager
+  instance = null
+
+  constructor: (statusBar)->
+    if instance
+      return instance
+    else
+      instance = statusBar
+
+module.exports =
+  activate: (state) ->
+    devunity = new DevunityView()
+
+  consumeStatusBar: (statusBar) ->
+    statusmanager = new StatusBarManager(statusBar)

@@ -3,11 +3,6 @@
   "main": "./lib/devunity",
   "version": "2.1.0",
   "description": "Share and collaborate in real-time using devunity",
-  "activationEvents": [
-    "devunity:start",
-    "devunity:stop",
-    "devunity:stopAll"
-  ],
   "repository": "https://github.com/aloncarmel/devunityatom",
   "license": "MIT",
   "readmeFilename": "README.md",
@@ -18,5 +13,12 @@
     "firebase": "~1.0.5",
     "atom-space-pen-views": "^2.0.3",
     "jquery": "^2"
-  }
+  },
+  "consumedServices": {
+   "status-bar": {
+     "versions": {
+       "^1.0.0": "consumeStatusBar"
+     }
+   }
+ }
 }
