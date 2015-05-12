@@ -1,7 +1,7 @@
 {
   "name": "devunity",
   "main": "./lib/devunity",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Share and collaborate in real-time using devunity",
   "repository": "https://github.com/aloncarmel/devunityatom",
   "license": "MIT",
@@ -15,10 +15,10 @@
     "jquery": "^2"
   },
   "consumedServices": {
-   "status-bar": {
-     "versions": {
-       "^1.0.0": "consumeStatusBar"
-     }
-   }
- }
+    "status-bar": {
+      "versions": {
+        "^1.0.0": "consumeStatusBar"
+      }
+    }
+  }
 }
