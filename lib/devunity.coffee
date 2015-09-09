@@ -176,7 +176,7 @@ class ColabView extends View
 
   @content: (@codekey, @filename) ->
     #console.log(@codekey)
-    @div class: 'devunity devunitypanel inline-block devunity_'+@codekey+'',outlet: @codekey , =>
+    @div class: 'devunity devunitypanel  panel panel-bottom devunity_'+@codekey+'',outlet: @codekey , =>
       @div
         class: 'colabdetailsrow'
         =>
@@ -192,61 +192,35 @@ class ColabView extends View
             @span 'un',style:'color:#ef4423'
             @span 'ity}'
           @div class: 'pull-left', style:'padding-left:5px;padding-right:5px',=>
-            @a 'Open in web', href: 'http://devunity.com/c/'+@codekey,target:"_blank"
+            @a '/ '+@codekey, href: 'http://devunity.com/c/'+@codekey,target:"_blank"
+
+  show: ->
+    statusbar = new StatusBarManager()
+    #statusbar.addRightTile(item: this, priority: 1000)
+    atom.workspace.addBottomPanel(item: this)
+
+class DevunityActivationPanel extends View
+  @content: ->
+    @div class: 'devunity devunitybox inline-block',=>
+      @span '{start dev',style:''
+      @span 'un',style:'color:#ef4423'
+      @span 'ity session}'
 
   show: ->
     statusbar = new StatusBarManager()
     statusbar.addRightTile(item: this, priority: 1000)
+    $('.devunitybox').on 'click', =>
+      newdevunity = new DevunitySession()
+      newdevunity.start()
 
-    #atom.workspace.addBottomPanel(item: this)
-
-class DevunityView extends View
-  @activate: -> new DevunityView
+class DevunitySession extends View
+  @activate: -> new DevunitySession
 
   @content: ->
     @div class: 'devunity devunitypanel panel panel-bottom devunity_'+@codekey+'',outlet: @codekey , =>
       @div
 
   detaching: false
-
-  initialize: ->
-
-    config = new SetupConfig()
-    config.setupApiDefault()
-
-    atom.commands.add 'atom-workspace', 'devunity:start', => @start()
-    atom.commands.add 'atom-workspace', 'devunity:stop', => @stop()
-    atom.commands.add 'atom-workspace', 'devunity:stopAll', => @stopAll()
-
-    #atom.commands.add 'atom-workspace', 'devunity:startLive', => @startLive()
-    #atom.commands.add 'atom-workspace', 'devunity:stopLive', => @stopLive()
-
-    #atom.commands.add 'atom-workspace', 'devunity:startfromkey', => @startFromKey()
-
-
-    @stopobserving = atom.workspace.observeActivePaneItem (pad) =>
-      @managePanes(pad)
-
-    @stopobservepanes = atom.workspace.onDidDestroyPaneItem (event) =>
-      if(event.item.firepad)
-          @stopItem(event.item)
-
-    @detach()
-
-  detach: ->
-
-    @detaching = true
-    super
-    @detaching = false
-
-  managePanes: (@pad) ->
-
-    @manageLive(@pad)
-
-    $('.devunitypanel').hide()
-    if @pad
-      if @pad.devunitycodeid
-        $('.devunity_'+@pad.devunitycodeid).show()
 
   startFromKey: ->
     @startkey = new StartFromKeyView()
@@ -267,18 +241,6 @@ class DevunityView extends View
           console.log(response)
           atom.config.set("devunity.livekey",response.key);
 
-  manageLive: (@pad) ->
-
-    if atom.config.get("devunity.livekey")
-      console.log('We are here!');
-      #lets open a new session for this pad. dont do anything if there is an existing one.
-      if !@pad.firepad
-        @start()
-
-      #add the current pad id to the playlist and broadcast it.
-      @playlist = new Firebase('https://devunityio.firebaseio.com/p/'+atom.config.get("devunity.livekey"));
-      @playlistsessions = @playlist.child('sessions');
-      @playlistsessions.push(@pad.devunitycodeid);
 
   start: ->
 
@@ -301,7 +263,7 @@ class DevunityView extends View
 
   activateSession: (codeurl,username) ->
     @detach()
-
+    $('.devunitybox').hide()
     codekey = codeurl.split "="
     @ref = new Firebase('https://devunityio.firebaseio.com/c/'+codekey[1]);
 
@@ -398,7 +360,7 @@ class DevunityView extends View
       return 'untitled'
 
   getLanguage: ->
-
+    #return 'javascript'
     #filepath = atom.workspace.getActiveTextEditor().getPath()
     #if(!filepath)
     #  language = 'javascript'
@@ -407,14 +369,17 @@ class DevunityView extends View
     #  if(!language)
     #    language = 'javascript'
 
-    editor = atom.workspace.getActiveEditor()
+    editor = atom.workspace.getActiveTextEditor()
+    #console.log(atom.workspace)
+    #return 'javascript'
     grammar = editor.getGrammar()
     language = grammar.name;
     console.log(grammar)
     if language == 'Null Grammar'
       language = 'javascript'
-
+#
     return language.toLowerCase()
+
 
   getColabComment: (fileextension,codekey) ->
 
@@ -537,9 +502,9 @@ class DevunityView extends View
 
 
   stopItem: (@pad) ->
-
+    $('.devunitybox').show()
     console.log('Stop collab!')
-    $('#stopCollab').detach()
+    #$('#stopCollab').detach()
     selections = @pad.getSelections()
     for i,d in selections
       i.clear()
@@ -559,7 +524,7 @@ class DevunityView extends View
 
   stopAll: ->
     atom.config.unset("devunity.livekey");
-    editors = atom.workspace.getEditors()
+    editors = atom.workspace.getTextEditors()
     for i,d in editors
       @stopItem(i)
 
@@ -576,7 +541,79 @@ class StatusBarManager
 
 module.exports =
   activate: (state) ->
-    devunity = new DevunityView()
+    #devunity = new DevunitySession()
+
+    console.log('im here also')
+    config = new SetupConfig()
+    config.setupApiDefault()
+
+    atom.commands.add 'atom-workspace', 'devunity:start', => @startSession()
+    atom.commands.add 'atom-workspace', 'devunity:stop', => @stopSession()
+    atom.commands.add 'atom-workspace', 'devunity:stopAll', => @stopAllSessions()
+
+    #atom.commands.add 'atom-workspace', 'devunity:startLive', => @startLive()
+    #atom.commands.add 'atom-workspace', 'devunity:stopLive', => @stopLive()
+
+    #atom.commands.add 'atom-workspace', 'devunity:startfromkey', => @startFromKey()
+
+
+    @stopobserving = atom.workspace.observeActivePaneItem (pad) =>
+      @managePanes(pad)
+
+    @stopobservepanes = atom.workspace.onDidDestroyPaneItem (event) =>
+      if(event.item.firepad)
+          @stopItem(event.item)
+
+  initialize: ->
+
+    @detach()
+
+  startSession: ->
+    devunity = new DevunitySession();
+    devunity.start()
+
+  stopSession: ->
+    devunity = new DevunitySession();
+    devunity.stop()
+
+  stopAllSessions: ->
+    devunity = new DevunitySession();
+    devunity.stopAll()
+
+  detach: ->
+
+    @detaching = true
+    #super
+    @detaching = false
+
+  managePanes: (@pad) ->
+
+    console.log('im here')
+
+    @manageLive(@pad)
+
+    $('.devunitypanel').hide()
+    $('.devunitybox').show()
+    if @pad
+      if @pad.devunitycodeid
+        $('.devunitybox').hide()
+        $('.devunity_'+@pad.devunitycodeid).show()
+
+
+  manageLive: (@pad) ->
+
+    if atom.config.get("devunity.livekey")
+      console.log('We are here!');
+      #lets open a new session for this pad. dont do anything if there is an existing one.
+      if !@pad.firepad
+        @start()
+
+      #add the current pad id to the playlist and broadcast it.
+      @playlist = new Firebase('https://devunityio.firebaseio.com/p/'+atom.config.get("devunity.livekey"));
+      @playlistsessions = @playlist.child('sessions');
+      @playlistsessions.push(@pad.devunitycodeid);
 
   consumeStatusBar: (statusBar) ->
     statusmanager = new StatusBarManager(statusBar)
+    addpanel = new DevunityActivationPanel()
+    addpanel.show()
