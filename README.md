@@ -1,4 +1,4 @@
-# devunity for atom code edtior
+# devunity for atom code editor
 
 This package for Atom adds collaborative editing support via [Devunity](http://devunity.com).
 
