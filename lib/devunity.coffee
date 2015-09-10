@@ -442,63 +442,58 @@ class DevunitySession extends View
         comment +='# To end collaboration click Packages > Devunity > stop\n'
     return comment
 
+  getCurrentStats: (@pad,callback) ->
+    #Get the current pad stats as object
+    $.ajax
+      url:'https://devunityio.firebaseio.com/c/'+@pad.devunitycodeid+'/statistics.json'
+      type:'GET'
+      dataType:'json'
+      crossDomain: true
+      success: (response) =>
+        if response
+          callback(response)
+          #response.responseJSON,(-> callback)
+
+  updateStats: (stat,value,@pad) ->
+    console.log(stat)
+  	#Lets collect some statistics
+    this.getCurrentStats(@pad,(data) =>
+        console.log(data[stat])
+        pad = atom.workspace.getActiveTextEditor()
+        @ref = new Firebase('https://devunityio.firebaseio.com/c/'+pad.devunitycodeid);
+        stats = @ref.child('statistics')
+        if data[stat] == ''
+          data[stat] = 0
+
+        @objecttowrite = {}
+        if value != 1
+          @objecttowrite[stat] = parseInt(value)
+        else
+          @objecttowrite[stat] = parseInt(data[stat]+value)
+
+        stats.update(@objecttowrite);
+      );
 
   initStatistics: ->
 
 		#Lets collect some statistics
     pad = atom.workspace.getActiveTextEditor()
-    @ref = new Firebase('https://devunityio.firebaseio.com/c/'+@pad.devunitycodeid);
+    @ref = new Firebase('https://devunityio.firebaseio.com/c/'+pad.devunitycodeid);
     stats = @ref.child('statistics')
+    devsession = new DevunitySession();
 
-    pad.onDidChange(->
-			      stats.update({lines:pad.getLineCount()});
-			      stats.update({length:pad.getText().length});
+    pad.onDidStopChanging(->
+            devsession.updateStats('lines',pad.getLineCount(),pad)
+            devsession.updateStats('length',pad.getText().length,pad)
         );
 
+    pad.onDidInsertText(->
+            #devsession.updateStats('paste',1,pad)
+        );
 
-
-
-		#pad.on 'copy', =>
-
-			#console.log('copy');
-
-
-		#	if(!Collaborate.currentObject.statistics.copy) { Collaborate.currentObject.statistics.copy = 0 };
-
-		  #@stats.update({copy:Collaborate.currentObject.statistics.copy+1});
-
-
-
-     #$(window).on 'focus', (event) =>
-
-			#console.log('focus');
-
-			#Collaborate.GetCurrentCodeObject();
-
-			#if(!Collaborate.currentObject.statistics.focus) { Collaborate.currentObject.statistics.focus = 0 };
-
-			#Collaborate.statistics.update({focus:Collaborate.currentObject.statistics.focus+1});
-
-
-		#@editor.on 'paste', =>
-
-			#console.log('paste');
-
-			#Collaborate.GetCurrentCodeObject();
-
-			#if(!Collaborate.currentObject.statistics.paste) { Collaborate.currentObject.statistics.paste = 0 };
-
-			#Collaborate.statistics.update({paste:Collaborate.currentObject.statistics.paste+1});
-
-		#@editor.on 'blur', =>
-
-			#console.log('blur');
-
-			#Collaborate.GetCurrentCodeObject();
-
-			#if(!Collaborate.currentObject.statistics.blur) { Collaborate.currentObject.statistics.blur = 0 };
-
-			#Collaborate.statistics.update({blur:Collaborate.currentObject.statistics.blur+1});
+    pad.onDidAddSelection(->
+            #devsession.updateStats('copy',1,pad)
+        );
 
 
   stopItem: (@pad) ->
@@ -598,6 +593,9 @@ module.exports =
       if @pad.devunitycodeid
         $('.devunitybox').hide()
         $('.devunity_'+@pad.devunitycodeid).show()
+        #Update stats for focus.
+        devsession = new DevunitySession();
+        devsession.updateStats('blur',1,@pad)
 
 
   manageLive: (@pad) ->
