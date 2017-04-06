@@ -17,7 +17,21 @@
     padding: 5px;
 
 }
+.videoiframe {
+  opacity: 0.3;
+    height: 300px;
+    width: 490px;
+    z-index: 999999;
+    position: absolute;
+    bottom: 60px;
+    right: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
 
+  }
+.videoiframe:hover {
+  opacity: 0.8;
+
+}
 .chatitemwrapper {
   padding:10px;border-bottom:1px solid rgba(239,68,35,0.2);font-size:12px;height:39px;
 }

@@ -176,11 +176,15 @@ class ColabView extends View
 
   @content: (@codekey, @filename) ->
     #console.log(@codekey)
+    #<iframe src="https://appear.in/devunity_<%= code.key %>" class="videoiframe hidden-xs" frameborder="0" transparent="true"></iframe>
+
     @div class: 'devunity devunitypanel  panel panel-bottom devunity_'+@codekey+'',outlet: @codekey , =>
       @div
         class: 'colabdetailsrow'
         =>
           @div '[x] Stop',id: 'stopCollab', class: 'stopcollab pull-right'
+          @div id: 'openvideo', class:'openvideo pull-right',=>
+            @iframe src: 'https://appear.in/devunity_'+@codekey, class:'videoiframe'
           @div '[C] Send chat',id: 'openchat', class:'openchattext pull-right'
           @div '[D] Details',id: 'details', class: 'details pull-right'
           @div id: 'readonly', class: 'readonly pull-right', =>
