@@ -62,7 +62,7 @@ class ShowSessionDetails extends View
       @div 'This is your current session details',class:'sendchattext'
       @div 'Session on web',class:'sendchattext'
       @subview 'sessionurl', new TextEditorView(mini: true)
-      @a 'Open in browser', class:'floatright', href: 'http://devunity.com/c/'+codekey,target:"_blank"
+      @a 'Open in browser', class:'floatright', href: 'https://devunity.com/c/'+codekey,target:"_blank"
       @hr
       @div 'Session key',class:'sendchattext'
       @subview 'sessionkey', new TextEditorView(mini: true)
@@ -83,7 +83,7 @@ class ShowSessionDetails extends View
 
   show: (codekey) ->
     @sessionkey.setText(codekey)
-    @sessionurl.setText('http://www.devunity.com/c/'+codekey);
+    @sessionurl.setText('https://devunity.com/c/'+codekey);
     @removepanel = atom.workspace.addModalPanel(item:this)
     @sessionkey.focus()
 
@@ -183,8 +183,8 @@ class ColabView extends View
         class: 'colabdetailsrow'
         =>
           @div '[x] Stop',id: 'stopCollab', class: 'stopcollab pull-right'
-          @div id: 'openvideo', class:'openvideo pull-right',=>
-            @iframe src: 'https://appear.in/devunity_'+@codekey, class:'videoiframe'
+          #@div id: 'openvideo', class:'openvideo pull-right',=>
+          #  @iframe src: 'https://appear.in/devunity_'+@codekey, class:'videoiframe'
           @div '[C] Send chat',id: 'openchat', class:'openchattext pull-right'
           @div '[D] Details',id: 'details', class: 'details pull-right'
           @div id: 'readonly', class: 'readonly pull-right', =>
@@ -196,7 +196,7 @@ class ColabView extends View
             @span 'un',style:'color:#ef4423'
             @span 'ity}'
           @div class: 'pull-left', style:'padding-left:5px;padding-right:5px',=>
-            @a '/ '+@codekey, href: 'http://devunity.com/c/'+@codekey,target:"_blank"
+            @a '/ '+@codekey, href: 'https://devunity.com/c/'+@codekey,target:"_blank"
 
   show: ->
     statusbar = new StatusBarManager()
@@ -236,7 +236,7 @@ class DevunitySession extends View
     #Grab a playlist ID and save it.
 
     $.ajax
-      url:'http://devunity.com/playlist/new',
+      url:'https://devunity.com/playlist/new',
       type:'GET'
       dataType:'json'
       crossDomain: true
@@ -254,7 +254,7 @@ class DevunitySession extends View
       language = @getLanguage()
 
       $.ajax
-        url:'http://devunity.com/c/new/'+atom.config.get('devunity.apikey')
+        url:'https://devunity.com/c/new/'+atom.config.get('devunity.apikey')
         type:'POST'
         data:{'code':code,'language':language}
         dataType:'json'
@@ -390,59 +390,59 @@ class DevunitySession extends View
     comment = ''
     switch fileextension
       when 'py'
-        comment +='\n# Collaboration url: http://devunity.com/c/'+codekey+'\n'
+        comment +='\n# Collaboration url: https://devunity.com/c/'+codekey+'\n'
         comment +='# To end collaboration click Packages > Devunity > stop\n'
 
       when 'php'
-        comment += '\n// Collaboration url: http://devunity.com/c/'+codekey+'\n'
+        comment += '\n// Collaboration url: https://devunity.com/c/'+codekey+'\n'
         comment +='// To end collaboration click Packages > Devunity > stop\n'
 
       when 'html'
-        comment +='\n<!-- Collaboration url: http://devunity.com/c/'+codekey+'-->\n'
+        comment +='\n<!-- Collaboration url: https://devunity.com/c/'+codekey+'-->\n'
         comment +='<!-- To end collaboration click Packages > Devunity > stop\n'
 
       when 'js'
-        comment +='\n// Collaboration url: http://devunity.com/c/'+codekey+'\n'
+        comment +='\n// Collaboration url: https://devunity.com/c/'+codekey+'\n'
         comment +='// To end collaboration click Packages > Devunity > stop\n'
 
       when 'javascript'
-        comment +='\n// Collaboration url: http://devunity.com/c/'+codekey+'\n'
+        comment +='\n// Collaboration url: https://devunity.com/c/'+codekey+'\n'
         comment +='// To end collaboration click Packages > Devunity > stop\n'
 
       when 'coffee'
-        comment +='\n# Collaboration url: http://devunity.com/c/'+codekey+'\n'
+        comment +='\n# Collaboration url: https://devunity.com/c/'+codekey+'\n'
         comment +='# To end collaboration click Packages > Devunity > stop\n'
 
       when 'c'
-        comment +='\n/* Collaboration url: http://devunity.com/c/'+codekey+' */\n'
+        comment +='\n/* Collaboration url: https://devunity.com/c/'+codekey+' */\n'
         comment +='/* To end collaboration click Packages > Devunity > stop */\n'
 
       when 'css'
-        comment +='\n/* Collaboration url: http://devunity.com/c/'+codekey+' */\n'
+        comment +='\n/* Collaboration url: https://devunity.com/c/'+codekey+' */\n'
         comment +='/* To end collaboration click Packages > Devunity > stop */\n'
 
       when 'h'
-        comment +='\n/* Collaboration url: http://devunity.com/c/'+codekey+' */\n'
+        comment +='\n/* Collaboration url: https://devunity.com/c/'+codekey+' */\n'
         comment +='/* To end collaboration click Packages > Devunity > stop */\n'
 
       when 'jsp'
-        comment +='\n/* Collaboration url: http://devunity.com/c/'+codekey+' */\n'
+        comment +='\n/* Collaboration url: https://devunity.com/c/'+codekey+' */\n'
         comment +='/* To end collaboration click Packages > Devunity > stop */\n'
 
       when 'txt'
-        comment +='\n# Collaboration url: http://devunity.com/c/'+codekey+'\n'
+        comment +='\n# Collaboration url: https://devunity.com/c/'+codekey+'\n'
         comment +='# To end collaboration click Packages > Devunity > stop */\n'
 
       when 'pl'
-        comment +='\n# Collaboration url: http://devunity.com/c/'+codekey+'\n'
+        comment +='\n# Collaboration url: https://devunity.com/c/'+codekey+'\n'
         comment +='# To end collaboration click Packages > Devunity > stop\n'
 
       when 'rc'
-        comment +='\n# Collaboration url: http://devunity.com/c/'+codekey+'\n'
+        comment +='\n# Collaboration url: https://devunity.com/c/'+codekey+'\n'
         comment +='# To end collaboration click Packages > Devunity > stop\n'
 
       else # default, could also just omit condition or 'if True'
-        comment +='\n# Collaboration url: http://devunity.com/c/'+codekey+'\n'
+        comment +='\n# Collaboration url: https://devunity.com/c/'+codekey+'\n'
         comment +='# To end collaboration click Packages > Devunity > stop\n'
     return comment
 
