@@ -19,7 +19,7 @@ class StartFromKeyView extends View
     @div class:'devunity devunitypanel devunitystartfromkey',id:'devunitystartfromkey',=>
       @div 'Enter your session key below and hit start',class:'sendchattext'
       @subview 'sessionkey', new TextEditorView(mini: true)
-      @button 'Start', class:'chatbutton',type:'submit',id:'startsession'
+      #@button 'Start', class:'chatbutton',type:'submit',id:'startsession'
       @span 'Cancel',class:'floatright',id:'startkeyclose'
 
     detaching: false
@@ -185,7 +185,7 @@ class ColabView extends View
           @div '[x] Stop',id: 'stopCollab', class: 'stopcollab pull-right'
           #@div id: 'openvideo', class:'openvideo pull-right',=>
           #  @iframe src: 'https://appear.in/devunity_'+@codekey, class:'videoiframe'
-          @div '[C] Send chat',id: 'openchat', class:'openchattext pull-right'
+          #@div '[C] Send chat',id: 'openchat', class:'openchattext pull-right'
           @div '[D] Details',id: 'details', class: 'details pull-right'
           @div id: 'readonly', class: 'readonly pull-right', =>
             @label 'Read only ', =>
@@ -196,7 +196,7 @@ class ColabView extends View
             @span 'un',style:'color:#ef4423'
             @span 'ity}'
           @div class: 'pull-left', style:'padding-left:5px;padding-right:5px',=>
-            @a '/ '+@codekey, href: 'https://devunity.com/c/'+@codekey,target:"_blank"
+            @a 'https://devunity.com/c/'+@codekey, href: 'https://devunity.com/c/'+@codekey,target:"_blank"
 
   show: ->
     statusbar = new StatusBarManager()
@@ -381,7 +381,6 @@ class DevunitySession extends View
     console.log(grammar)
     if language == 'Null Grammar'
       language = 'javascript'
-#
     return language.toLowerCase()
 
 
